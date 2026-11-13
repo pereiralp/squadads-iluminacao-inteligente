@@ -4,6 +4,18 @@
 # 💡 SQUAD ADS
 ### 🌆 Iluminação Pública Inteligente + Energia Solar
 
+
+## 🌐 Acesse nosso projeto
+
+🚀 **O Squad ADS está disponível para demonstração online!**
+
+[![Acessar Site](https://img.shields.io/badge/🌐_ACESSAR_SQUAD_ADS-38BDF8?style=for-the-badge)](https://pereiralp.github.io/squadads-iluminacao-inteligente/)
+
+🔗 **Link:** https://pereiralp.github.io/squadads-iluminacao-inteligente/
+
+> 💡 Protótipo acadêmico de Iluminação Pública Inteligente e Energia Solar para Viçosa/MG.
+
+
 **Sistema Inteligente de Monitoramento e Gestão da Iluminação Pública de Viçosa — MG**
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
