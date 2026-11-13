@@ -1,30 +1,533 @@
-<!DOCTYPE html>
-<html lang="pt-BR"><head><link rel="stylesheet" href="css/estilo.css"/>
-<!-- Projeto acadêmico Squad ADS: arquivo único, dados demonstrativos em localStorage. -->
-<!-- Versão com MapLibre GL JS + OpenFreeMap (ruas vetoriais), sem mapa raster sobreposto. --><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Squad ADS | Central de Operações</title><!-- MapLibre GL JS: renderização de mapas vetoriais com ruas e bairros. -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Chart.js para gráficos energéticos interativos -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
-</head><body>
-<!-- Login, sidebar e abas existentes mantidos da versão original. -->
-<div class="login" id="login"><div class="login-card"><div class="logo login-logo"><svg aria-hidden="true" class="squad-mark" viewbox="0 0 64 64"><path d="M29 5 41 18v18L20 56H7l22-25Z" fill="#124C76"></path><path d="M43 15 57 30v22L39 39V22Z" fill="#43C6EF"></path><path d="M10 28 26 12v20L10 47Z" fill="#43C6EF"></path></svg></div><h1>Plataforma de Iluminação Inteligente</h1><div class="muted">Energia Solar • Viçosa — MG<br/>Squad ADS</div><label class="field">Perfil<select id="loginRole"><option value="gestor">Carlos Mendes — Gestor</option><option value="tecnico">Rafael Souza — Técnico</option></select></label><label class="field">Senha demonstrativa<input id="password" placeholder="Digite demo123" type="password"/></label><button class="btn" id="loginBtn" style="width:100%">Entrar no sistema</button><p class="muted">Senha para ambos os perfis: <b>demo123</b></p><p class="muted">Demonstração local, sem autenticação de servidor.</p></div></div>
-<div class="layout hidden" id="app"><aside class="sidebar"><div class="brand"><svg aria-hidden="true" class="squad-mark" viewbox="0 0 64 64"><path d="M29 5 41 18v18L20 56H7l22-25Z" fill="#124C76"></path><path d="M43 15 57 30v22L39 39V22Z" fill="#43C6EF"></path><path d="M10 28 26 12v20L10 47Z" fill="#43C6EF"></path></svg><span>Squad<span class="cyan">ADS</span></span></div><button class="nav active" data-page="dashboard"><span class="nav-icon">◫</span><span>Dashboard</span></button><button class="nav" data-page="monitoramento"><span class="nav-icon">◎</span><span>Monitoramento</span></button><button class="nav" data-page="iluminacao"><span class="nav-icon">◉</span><span>Iluminação</span></button><button class="nav" data-page="energia"><span class="nav-icon">ϟ</span><span>Energia</span></button><button class="nav" data-page="manutencao"><span class="nav-icon">⚒</span><span>Manutenção</span></button><button class="nav" data-page="relatorios"><span class="nav-icon">▥</span><span>Relatórios</span></button><button class="nav" data-page="alertas"><span class="nav-icon">♢</span><span>Alertas</span></button><button class="nav" data-page="tecnico"><span class="nav-icon">▣</span><span>App técnico</span></button><div class="sidebar-label">PAINEL DA CIDADE</div><div class="sidebottom"><div id="userLabel"></div><button class="btn alt small" id="logoutBtn" style="margin-top:12px">Sair</button><button class="btn alt small" id="resetBtn" style="margin-top:8px">Reiniciar demo</button></div></aside><main class="main"><header class="top"><div class="hello"><div class="eyebrow">CENTRAL DE OPERAÇÕES • VIÇOSA / MG</div><h1 id="pageTitle">Dashboard geral</h1><span class="tag">Monitore sua cidade em tempo real <span class="demo-dot"></span> Ambiente de demonstração</span></div><div class="header-actions"><button aria-label="Ver alertas" class="icon-btn" id="bellBtn" title="Ver alertas" type="button">♧<i id="alertDot"></i></button><div class="profile"><div class="avatar">S</div><div><strong id="headerName">Carlos Mendes</strong><small id="rolePill">Gestor</small></div></div></div></header>
-<section class="section active" id="dashboard"><div class="quick-pills"><button class="quick active" data-page="dashboard">Visão geral</button><button class="quick" data-page="monitoramento">Mapa da cidade</button><button class="quick" data-page="manutencao">Chamados</button><button class="quick" data-page="energia">Energia solar</button></div><div class="cards" id="metrics"></div><div class="feature-grid"><div class="feature-card"><div class="feature-sub"><span class="tiny-dot"></span> INTELIGÊNCIA URBANA</div><h2>Uma cidade mais <em>conectada.</em></h2><p>Controle a iluminação, antecipe falhas e acompanhe cada atendimento em um só lugar.</p><button class="btn" data-page="monitoramento" type="button">Explorar monitoramento <span aria-hidden="true">↗</span></button><div class="feature-glow"></div></div><div class="activity-card"><div class="line-between"><h2>Chamados recentes</h2><button class="link-mini" data-page="manutencao" type="button">Ver todos ↗</button></div><div id="recentTickets"></div></div><div class="solar-card"><div class="line-between"><h2>Energia solar</h2><span class="orb">☀</span></div><div class="solar-number">2.000 <span>kWh</span></div><p>Geração estimada neste mês</p><div class="solar-bars"><span style="height:44%"></span><span style="height:65%"></span><span style="height:52%"></span><span style="height:82%"></span><span style="height:68%"></span><span style="height:100%"></span><span style="height:85%"></span><span style="height:93%"></span><span style="height:76%"></span><span style="height:96%"></span><span style="height:68%"></span><span style="height:88%"></span></div><button class="link-mini" data-page="energia" type="button">Ver indicadores ↗</button></div></div><div class="cols"><div class="panel"><h2>Mapa da rede de iluminação</h2><div class="map city-map" id="dashMap" role="region" aria-label="Mapa interativo resumido de Viçosa"></div><div class="caption">Mapa de Viçosa por CARTO / OpenStreetMap • postes simulados em posições aproximadas.</div></div><div class="panel"><h2>Consumo × geração (últimos 7 dias)</h2><div class="graph-container graph-dashboard"><canvas id="dashboardEnergyCanvas" aria-label="Consumo e geração solar na semana" role="img"></canvas></div><h2 style="margin-top:24px">Status geral</h2><div id="summary"></div></div></div><div class="panel performance-panel"><div class="line-between performance-head"><div><span class="section-kicker">ANÁLISE SEMANAL</span><h2>Desempenho da rede</h2><p>Comparativo ilustrativo de consumo e geração solar • últimos 7 dias</p></div><div class="legend"><span><i class="legend-blue"></i> Consumo</span><span><i class="legend-cyan"></i> Geração solar</span></div></div><div id="performanceGraph"></div></div></section>
-<!-- MONITORAMENTO: mapa interativo de Viçosa, filtros e chamados por poste. -->
-<section class="section" id="monitoramento"><div class="panel"><h2>Mapa inteligente de Viçosa — MG</h2><div class="street-box"><input id="streetSearch" list="vicosaStreets" placeholder="Pesquisar rua de Viçosa, MG" aria-label="Pesquisar rua de Viçosa"/><datalist id="vicosaStreets"></datalist><button class="btn" id="streetLocate" type="button">Localizar rua</button><button class="btn alt" id="centerVicosa" type="button">Centralizar</button></div><div class="map-status" id="streetStatus">Use o zoom para ver os nomes das ruas no mapa.</div><div class="city-street-chips" id="streetChips"></div><div class="map-filter-ribbon" aria-label="Filtrar marcadores por estado"><span class="filter-caption">EXIBIR NO MAPA</span><button type="button" class="map-filter active" data-map-filter="todos">Todos <b id="mapCountAll">9</b></button><button type="button" class="map-filter" data-map-filter="normal"><i class="status-bullet ok"></i> Normal</button><button type="button" class="map-filter" data-map-filter="atencao"><i class="status-bullet caution"></i> Atenção</button><button type="button" class="map-filter" data-map-filter="falha"><i class="status-bullet error"></i> Falha</button><button type="button" class="map-reset" id="resetMapFilter" title="Limpar filtros">Limpar filtros</button></div><div class="toolbar"><input id="searchPost" placeholder="Buscar poste ou endereço"/><select id="filterPost"><option value="todos">Todos os postes</option><option value="normal">Normal</option><option value="atencao">Atenção</option><option value="falha">Falha</option></select><button class="btn alt" id="simulate">Simular falha aleatória</button></div><div class="cols"><div><div class="map-map-head"><span>📍 Viçosa, Minas Gerais <small>• Localizações demonstrativas</small></span><button type="button" class="btn alt small" id="mapThemeToggle" aria-label="Alternar mapa escuro e claro">☀ Mapa claro</button><button type="button" class="btn alt small" id="mapFullscreen" aria-label="Alternar mapa em tela cheia">⛶ Ampliar mapa</button></div><div class="map city-map map-primary" id="mainMap" role="region" aria-label="Mapa interativo de postes de iluminação em Viçosa"></div><div class="map-bottom-note"><span id="mapVisibleCount">9 postes visíveis</span><span>🖱 Arraste • role para zoom • clique nos postes</span></div><div class="map-legend"><span><i></i> Normal</span><span><i class="warn"></i> Atenção</span><span><i class="bad"></i> Falha</span></div><div class="caption">Ruas reais de Viçosa (OpenStreetMap) • posições de postes aproximadas para demonstração</div></div><div class="panel" id="postDetail">Selecione um poste no mapa.</div></div><div class="tablewrap" id="postsTable"></div></div></section>
-<section class="section" id="iluminacao"><div class="panel"><h2>Gestão da iluminação</h2><p class="notice">Estados de luminosidade e comunicação são simulados para a apresentação acadêmica.</p><div id="lightingOverview" class="lighting-overview"></div><div id="lightsTable"></div></div></section>
-<!-- ENERGIA: séries simuladas coerentes, gráficos responsivos e seletor de período. -->
-<section class="section" id="energia" aria-labelledby="energyHeading">
-  <div class="section-intro"><div><span class="section-kicker">CENTRAL DE ENERGIA</span><h2 id="energyHeading">Inteligência energética</h2><p class="muted">Balanço demonstrativo de consumo, geração solar e armazenamento em Viçosa.</p></div><div class="period-tabs" role="group" aria-label="Período da análise"><button class="period-btn" data-period="dia" aria-pressed="false">Dia · 24h</button><button class="period-btn active" data-period="semana" aria-pressed="true">Semana</button><button class="period-btn" data-period="mes" aria-pressed="false">Mês</button></div></div>
-  <div class="cards energy-kpis" id="energyMetrics"></div>
-  <div class="panel energy-hero"><div class="panel-heading"><div><h2>Consumo × geração solar</h2><p class="muted">Consumo em barras azuis · geração em linha dourada · valores em kWh</p></div><span class="tiny-label">DADOS SIMULADOS</span></div><div class="graph-container graph-main"><canvas id="energyComboCanvas" role="img" aria-label="Gráfico combinado de consumo e geração solar"></canvas></div></div>
-  <div class="energy-secondary"><div class="panel"><h2>Origem da energia consumida</h2><p class="muted">Participação da energia solar, da rede e da bateria no consumo do período</p><div class="graph-container graph-donut"><canvas id="energyOriginCanvas" role="img" aria-label="Gráfico de rosca de origem da energia"></canvas></div><div id="energyOriginLegend" class="origin-legend"></div></div><div class="panel"><h2>Armazenamento da bateria</h2><p class="muted">Estimativa do nível de carga ao longo do período</p><div class="graph-container graph-battery"><canvas id="energyBatteryCanvas" role="img" aria-label="Linha com a carga da bateria em porcentagem"></canvas></div><p class="notice energy-note">Os valores simulam um sistema híbrido. A energia exportada/excedente não é contabilizada como consumo.</p></div></div>
-  <div class="panel"><h2>Leitura dos indicadores</h2><div class="energy-info-grid"><div><b>Solar direta</b><span>Energia fotovoltaica utilizada pelas luminárias.</span></div><div><b>Rede elétrica</b><span>Complementa a demanda quando a geração não é suficiente.</span></div><div><b>Bateria</b><span>Energia armazenada anteriormente e utilizada no período.</span></div></div></div>
-</section>
-<section class="section" id="manutencao"><div class="panel"><h2>Manutenção / Falhas</h2><div class="toolbar"><select id="filterTicket"><option value="todos">Todos os chamados</option><option value="aberto">Abertos</option><option value="aprovado">Aprovados</option><option value="em atendimento">Em atendimento</option><option value="resolvido">Resolvidos</option></select><button class="btn alt" id="createFailure">Gerar falha de teste</button></div><div class="tablewrap" id="ticketsTable"></div></div></section>
-<section class="section" id="relatorios"><div class="panel"><h2>Relatórios</h2><div class="detail"><div>Resumo de consumo<strong>2.000 kWh / mês</strong></div><div>Emissões evitadas<strong>1.250 kg CO₂ (simulado)</strong></div><div>Falhas e manutenções<strong id="reportFailures">—</strong></div><div>Economia estimada<strong>R$ 3.452,18</strong></div></div><p class="muted">Exportação local dos dados de demonstração, sem backend.</p><div id="reportOverview" class="report-overview"></div><div class="actions"><button class="btn" id="exportJson">Exportar JSON</button><button class="btn alt" id="exportCsv">Exportar CSV dos chamados</button><button class="btn alt" onclick="window.print()">Imprimir / Salvar em PDF</button></div></div></section>
-<section class="section" id="alertas"><div class="panel"><h2>Alertas e ocorrências</h2><div id="alertOverview" class="alert-overview"></div><div id="alertsList"></div></div></section>
-<section class="section" id="tecnico"><div class="mobile"><div class="mobile-head">‹   Ordens do dia — Rafael</div><div class="toolbar" style="padding:12px"><select id="filterMobile"><option value="todos">Todas</option><option value="aprovado">Novas</option><option value="em atendimento">Em andamento</option><option value="resolvido">Histórico</option></select></div><div id="mobileOrders"></div><div id="mobileDetail"></div></div></section>
-<div class="footer">Squad ADS • Protótipo funcional em arquivo único • Dados armazenados somente neste navegador</div></main></div><div class="toast hidden" id="toast"></div>
-<script src="js/script.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <link rel="stylesheet" href="css/estilo.css" />
+    <!-- Projeto acadêmico Squad ADS: arquivo único, dados demonstrativos em localStorage. -->
+    <!-- Versão com MapLibre GL JS + OpenFreeMap (ruas vetoriais), sem mapa raster sobreposto. -->
+    <meta charset="utf-8" />
+    <meta content="width=device-width,initial-scale=1" name="viewport" />
+    <title>Squad ADS | Central de Operações</title>
+    <!-- MapLibre GL JS: renderização de mapas vetoriais com ruas e bairros. -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Chart.js para gráficos energéticos interativos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <!-- Login, sidebar e abas existentes mantidos da versão original. -->
+    <div class="login" id="login">
+      <div class="login-card">
+        <div class="logo login-logo">
+          <svg aria-hidden="true" class="squad-mark" viewbox="0 0 64 64">
+            <path d="M29 5 41 18v18L20 56H7l22-25Z" fill="#124C76"></path>
+            <path d="M43 15 57 30v22L39 39V22Z" fill="#43C6EF"></path>
+            <path d="M10 28 26 12v20L10 47Z" fill="#43C6EF"></path>
+          </svg>
+        </div>
+        <h1>Plataforma de Iluminação Inteligente</h1>
+        <div class="muted">Energia Solar • Viçosa — MG<br />Squad ADS</div>
+        <label class="field"
+          >Perfil<select id="loginRole">
+            <option value="gestor">Carlos Mendes — Gestor</option>
+            <option value="tecnico">Rafael Souza — Técnico</option>
+          </select></label
+        ><label class="field"
+          >Senha demonstrativa<input
+            id="password"
+            placeholder="Digite demo123"
+            type="password" /></label
+        ><button class="btn" id="loginBtn" style="width: 100%">
+          Entrar no sistema
+        </button>
+        <p class="muted">Senha para ambos os perfis: <b>demo123</b></p>
+        <p class="muted">Demonstração local, sem autenticação de servidor.</p>
+      </div>
+    </div>
+    <div class="layout hidden" id="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <svg aria-hidden="true" class="squad-mark" viewbox="0 0 64 64">
+            <path d="M29 5 41 18v18L20 56H7l22-25Z" fill="#124C76"></path>
+            <path d="M43 15 57 30v22L39 39V22Z" fill="#43C6EF"></path>
+            <path d="M10 28 26 12v20L10 47Z" fill="#43C6EF"></path></svg
+          ><span>Squad<span class="cyan">ADS</span></span>
+        </div>
+        <button class="nav active" data-page="dashboard">
+          <span class="nav-icon">◫</span><span>Dashboard</span></button
+        ><button class="nav" data-page="monitoramento">
+          <span class="nav-icon">◎</span><span>Monitoramento</span></button
+        ><button class="nav" data-page="iluminacao">
+          <span class="nav-icon">◉</span><span>Iluminação</span></button
+        ><button class="nav" data-page="energia">
+          <span class="nav-icon">ϟ</span><span>Energia</span></button
+        ><button class="nav" data-page="manutencao">
+          <span class="nav-icon">⚒</span><span>Manutenção</span></button
+        ><button class="nav" data-page="relatorios">
+          <span class="nav-icon">▥</span><span>Relatórios</span></button
+        ><button class="nav" data-page="alertas">
+          <span class="nav-icon">♢</span><span>Alertas</span></button
+        ><button class="nav" data-page="tecnico">
+          <span class="nav-icon">▣</span><span>App técnico</span>
+        </button>
+        <div class="sidebar-label">PAINEL DA CIDADE</div>
+        <div class="sidebottom">
+          <div id="userLabel"></div>
+          <button class="btn alt small" id="logoutBtn" style="margin-top: 12px">
+            Sair</button
+          ><button class="btn alt small" id="resetBtn" style="margin-top: 8px">
+            Reiniciar demo
+          </button>
+        </div>
+      </aside>
+      <main class="main">
+        <header class="top">
+          <div class="hello">
+            <div class="eyebrow">CENTRAL DE OPERAÇÕES • VIÇOSA / MG</div>
+            <h1 id="pageTitle">Dashboard geral</h1>
+            <span class="tag"
+              >Monitore sua cidade em tempo real
+              <span class="demo-dot"></span> Ambiente de demonstração</span
+            >
+          </div>
+          <div class="header-actions">
+            <button
+              aria-label="Ver alertas"
+              class="icon-btn"
+              id="bellBtn"
+              title="Ver alertas"
+              type="button"
+            >
+              ♧<i id="alertDot"></i>
+            </button>
+            <div class="profile">
+              <div class="avatar">S</div>
+              <div>
+                <strong id="headerName">Carlos Mendes</strong
+                ><small id="rolePill">Gestor</small>
+              </div>
+            </div>
+          </div>
+        </header>
+        <section class="section active" id="dashboard">
+          <div class="quick-pills">
+            <button class="quick active" data-page="dashboard">
+              Visão geral</button
+            ><button class="quick" data-page="monitoramento">
+              Mapa da cidade</button
+            ><button class="quick" data-page="manutencao">Chamados</button
+            ><button class="quick" data-page="energia">Energia solar</button>
+          </div>
+          <div class="cards" id="metrics"></div>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-sub">
+                <span class="tiny-dot"></span> INTELIGÊNCIA URBANA
+              </div>
+              <h2>Uma cidade mais <em>conectada.</em></h2>
+              <p>
+                Controle a iluminação, antecipe falhas e acompanhe cada
+                atendimento em um só lugar.
+              </p>
+              <button class="btn" data-page="monitoramento" type="button">
+                Explorar monitoramento <span aria-hidden="true">↗</span>
+              </button>
+              <div class="feature-glow"></div>
+            </div>
+            <div class="activity-card">
+              <div class="line-between">
+                <h2>Chamados recentes</h2>
+                <button class="link-mini" data-page="manutencao" type="button">
+                  Ver todos ↗
+                </button>
+              </div>
+              <div id="recentTickets"></div>
+            </div>
+            <div class="solar-card">
+              <div class="line-between">
+                <h2>Energia solar</h2>
+                <span class="orb">☀</span>
+              </div>
+              <div class="solar-number">2.000 <span>kWh</span></div>
+              <p>Geração estimada neste mês</p>
+              <div class="solar-bars">
+                <span style="height: 44%"></span
+                ><span style="height: 65%"></span
+                ><span style="height: 52%"></span
+                ><span style="height: 82%"></span
+                ><span style="height: 68%"></span
+                ><span style="height: 100%"></span
+                ><span style="height: 85%"></span
+                ><span style="height: 93%"></span
+                ><span style="height: 76%"></span
+                ><span style="height: 96%"></span
+                ><span style="height: 68%"></span
+                ><span style="height: 88%"></span>
+              </div>
+              <button class="link-mini" data-page="energia" type="button">
+                Ver indicadores ↗
+              </button>
+            </div>
+          </div>
+          <div class="cols">
+            <div class="panel">
+              <h2>Mapa da rede de iluminação</h2>
+              <div
+                class="map city-map"
+                id="dashMap"
+                role="region"
+                aria-label="Mapa interativo resumido de Viçosa"
+              ></div>
+              <div class="caption">
+                Mapa de Viçosa por CARTO / OpenStreetMap • postes simulados em
+                posições aproximadas.
+              </div>
+            </div>
+            <div class="panel">
+              <h2>Consumo × geração (últimos 7 dias)</h2>
+              <div class="graph-container graph-dashboard">
+                <canvas
+                  id="dashboardEnergyCanvas"
+                  aria-label="Consumo e geração solar na semana"
+                  role="img"
+                ></canvas>
+              </div>
+              <h2 style="margin-top: 24px">Status geral</h2>
+              <div id="summary"></div>
+            </div>
+          </div>
+          <div class="panel performance-panel">
+            <div class="line-between performance-head">
+              <div>
+                <span class="section-kicker">ANÁLISE SEMANAL</span>
+                <h2>Desempenho da rede</h2>
+                <p>
+                  Comparativo ilustrativo de consumo e geração solar • últimos 7
+                  dias
+                </p>
+              </div>
+              <div class="legend">
+                <span><i class="legend-blue"></i> Consumo</span
+                ><span><i class="legend-cyan"></i> Geração solar</span>
+              </div>
+            </div>
+            <div id="performanceGraph"></div>
+          </div>
+        </section>
+        <!-- MONITORAMENTO: mapa interativo de Viçosa, filtros e chamados por poste. -->
+        <section class="section" id="monitoramento">
+          <div class="panel">
+            <h2>Mapa inteligente de Viçosa — MG</h2>
+            <div class="street-box">
+              <input
+                id="streetSearch"
+                list="vicosaStreets"
+                placeholder="Pesquisar rua de Viçosa, MG"
+                aria-label="Pesquisar rua de Viçosa"
+              /><datalist id="vicosaStreets"></datalist
+              ><button class="btn" id="streetLocate" type="button">
+                Localizar rua</button
+              ><button class="btn alt" id="centerVicosa" type="button">
+                Centralizar
+              </button>
+            </div>
+            <div class="map-status" id="streetStatus">
+              Use o zoom para ver os nomes das ruas no mapa.
+            </div>
+            <div class="city-street-chips" id="streetChips"></div>
+            <div
+              class="map-filter-ribbon"
+              aria-label="Filtrar marcadores por estado"
+            >
+              <span class="filter-caption">EXIBIR NO MAPA</span
+              ><button
+                type="button"
+                class="map-filter active"
+                data-map-filter="todos"
+              >
+                Todos <b id="mapCountAll">9</b></button
+              ><button
+                type="button"
+                class="map-filter"
+                data-map-filter="normal"
+              >
+                <i class="status-bullet ok"></i> Normal</button
+              ><button
+                type="button"
+                class="map-filter"
+                data-map-filter="atencao"
+              >
+                <i class="status-bullet caution"></i> Atenção</button
+              ><button type="button" class="map-filter" data-map-filter="falha">
+                <i class="status-bullet error"></i> Falha</button
+              ><button
+                type="button"
+                class="map-reset"
+                id="resetMapFilter"
+                title="Limpar filtros"
+              >
+                Limpar filtros
+              </button>
+            </div>
+            <div class="toolbar">
+              <input
+                id="searchPost"
+                placeholder="Buscar poste ou endereço"
+              /><select id="filterPost">
+                <option value="todos">Todos os postes</option>
+                <option value="normal">Normal</option>
+                <option value="atencao">Atenção</option>
+                <option value="falha">Falha</option></select
+              ><button class="btn alt" id="simulate">
+                Simular falha aleatória
+              </button>
+            </div>
+            <div class="cols">
+              <div>
+                <div class="map-map-head">
+                  <span
+                    >📍 Viçosa, Minas Gerais
+                    <small>• Localizações demonstrativas</small></span
+                  ><button
+                    type="button"
+                    class="btn alt small"
+                    id="mapThemeToggle"
+                    aria-label="Alternar mapa escuro e claro"
+                  >
+                    ☀ Mapa claro</button
+                  ><button
+                    type="button"
+                    class="btn alt small"
+                    id="mapFullscreen"
+                    aria-label="Alternar mapa em tela cheia"
+                  >
+                    ⛶ Ampliar mapa
+                  </button>
+                </div>
+                <div
+                  class="map city-map map-primary"
+                  id="mainMap"
+                  role="region"
+                  aria-label="Mapa interativo de postes de iluminação em Viçosa"
+                ></div>
+                <div class="map-bottom-note">
+                  <span id="mapVisibleCount">9 postes visíveis</span
+                  ><span>🖱 Arraste • role para zoom • clique nos postes</span>
+                </div>
+                <div class="map-legend">
+                  <span><i></i> Normal</span
+                  ><span><i class="warn"></i> Atenção</span
+                  ><span><i class="bad"></i> Falha</span>
+                </div>
+                <div class="caption">
+                  Ruas reais de Viçosa (OpenStreetMap) • posições de postes
+                  aproximadas para demonstração
+                </div>
+              </div>
+              <div class="panel" id="postDetail">
+                Selecione um poste no mapa.
+              </div>
+            </div>
+            <div class="tablewrap" id="postsTable"></div>
+          </div>
+        </section>
+        <section class="section" id="iluminacao">
+          <div class="panel">
+            <h2>Gestão da iluminação</h2>
+            <p class="notice">
+              Estados de luminosidade e comunicação são simulados para a
+              apresentação acadêmica.
+            </p>
+            <div id="lightingOverview" class="lighting-overview"></div>
+            <div id="lightsTable"></div>
+          </div>
+        </section>
+        <!-- ENERGIA: séries simuladas coerentes, gráficos responsivos e seletor de período. -->
+        <section class="section" id="energia" aria-labelledby="energyHeading">
+          <div class="section-intro">
+            <div>
+              <span class="section-kicker">CENTRAL DE ENERGIA</span>
+              <h2 id="energyHeading">Inteligência energética</h2>
+              <p class="muted">
+                Balanço demonstrativo de consumo, geração solar e armazenamento
+                em Viçosa.
+              </p>
+            </div>
+            <div
+              class="period-tabs"
+              role="group"
+              aria-label="Período da análise"
+            >
+              <button class="period-btn" data-period="dia" aria-pressed="false">
+                Dia · 24h</button
+              ><button
+                class="period-btn active"
+                data-period="semana"
+                aria-pressed="true"
+              >
+                Semana</button
+              ><button
+                class="period-btn"
+                data-period="mes"
+                aria-pressed="false"
+              >
+                Mês
+              </button>
+            </div>
+          </div>
+          <div class="cards energy-kpis" id="energyMetrics"></div>
+          <div class="panel energy-hero">
+            <div class="panel-heading">
+              <div>
+                <h2>Consumo × geração solar</h2>
+                <p class="muted">
+                  Consumo em barras azuis · geração em linha dourada · valores
+                  em kWh
+                </p>
+              </div>
+              <span class="tiny-label">DADOS SIMULADOS</span>
+            </div>
+            <div class="graph-container graph-main">
+              <canvas
+                id="energyComboCanvas"
+                role="img"
+                aria-label="Gráfico combinado de consumo e geração solar"
+              ></canvas>
+            </div>
+          </div>
+          <div class="energy-secondary">
+            <div class="panel">
+              <h2>Origem da energia consumida</h2>
+              <p class="muted">
+                Participação da energia solar, da rede e da bateria no consumo
+                do período
+              </p>
+              <div class="graph-container graph-donut">
+                <canvas
+                  id="energyOriginCanvas"
+                  role="img"
+                  aria-label="Gráfico de rosca de origem da energia"
+                ></canvas>
+              </div>
+              <div id="energyOriginLegend" class="origin-legend"></div>
+            </div>
+            <div class="panel">
+              <h2>Armazenamento da bateria</h2>
+              <p class="muted">
+                Estimativa do nível de carga ao longo do período
+              </p>
+              <div class="graph-container graph-battery">
+                <canvas
+                  id="energyBatteryCanvas"
+                  role="img"
+                  aria-label="Linha com a carga da bateria em porcentagem"
+                ></canvas>
+              </div>
+              <p class="notice energy-note">
+                Os valores simulam um sistema híbrido. A energia
+                exportada/excedente não é contabilizada como consumo.
+              </p>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Leitura dos indicadores</h2>
+            <div class="energy-info-grid">
+              <div>
+                <b>Solar direta</b
+                ><span>Energia fotovoltaica utilizada pelas luminárias.</span>
+              </div>
+              <div>
+                <b>Rede elétrica</b
+                ><span
+                  >Complementa a demanda quando a geração não é
+                  suficiente.</span
+                >
+              </div>
+              <div>
+                <b>Bateria</b
+                ><span
+                  >Energia armazenada anteriormente e utilizada no
+                  período.</span
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="manutencao">
+          <div class="panel">
+            <h2>Manutenção / Falhas</h2>
+            <div class="toolbar">
+              <select id="filterTicket">
+                <option value="todos">Todos os chamados</option>
+                <option value="aberto">Abertos</option>
+                <option value="aprovado">Aprovados</option>
+                <option value="em atendimento">Em atendimento</option>
+                <option value="resolvido">Resolvidos</option></select
+              ><button class="btn alt" id="createFailure">
+                Gerar falha de teste
+              </button>
+            </div>
+            <div class="tablewrap" id="ticketsTable"></div>
+          </div>
+        </section>
+        <section class="section" id="relatorios">
+          <div class="panel">
+            <h2>Relatórios</h2>
+            <div class="detail">
+              <div>Resumo de consumo<strong>2.000 kWh / mês</strong></div>
+              <div>
+                Emissões evitadas<strong>1.250 kg CO₂ (simulado)</strong>
+              </div>
+              <div>
+                Falhas e manutenções<strong id="reportFailures">—</strong>
+              </div>
+              <div>Economia estimada<strong>R$ 3.452,18</strong></div>
+            </div>
+            <p class="muted">
+              Exportação local dos dados de demonstração, sem backend.
+            </p>
+            <div id="reportOverview" class="report-overview"></div>
+            <div class="actions">
+              <button class="btn" id="exportJson">Exportar JSON</button
+              ><button class="btn alt" id="exportCsv">
+                Exportar CSV dos chamados</button
+              ><button class="btn alt" onclick="window.print()">
+                Imprimir / Salvar em PDF
+              </button>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="alertas">
+          <div class="panel">
+            <h2>Alertas e ocorrências</h2>
+            <div id="alertOverview" class="alert-overview"></div>
+            <div id="alertsList"></div>
+          </div>
+        </section>
+        <section class="section" id="tecnico">
+          <div class="mobile">
+            <div class="mobile-head">‹   Ordens do dia — Rafael</div>
+            <div class="toolbar" style="padding: 12px">
+              <select id="filterMobile">
+                <option value="todos">Todas</option>
+                <option value="aprovado">Novas</option>
+                <option value="em atendimento">Em andamento</option>
+                <option value="resolvido">Histórico</option>
+              </select>
+            </div>
+            <div id="mobileOrders"></div>
+            <div id="mobileDetail"></div>
+          </div>
+        </section>
+        <div class="footer">
+          Squad ADS • Protótipo funcional em arquivo único • Dados armazenados
+          somente neste navegador
+        </div>
+      </main>
+    </div>
+    <div class="toast hidden" id="toast"></div>
+    <script src="js/script.js"></script>
+  </body>
+</html>
