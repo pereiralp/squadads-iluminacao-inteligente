@@ -288,6 +288,7 @@ O arquivo `index.html` reúne o HTML, CSS e JavaScript do sistema.
 | 04 | **Oséias Júnior Bailon Geraldo** |
 | 05 | **Rodrigo Leite Batista** |
 | 06 | **Vitor Hugo Nacional Santana** |
+| 07 | **Hildek Luiz Ferreira de Amorim** |
 
 **Curso:** Análise e Desenvolvimento de Sistemas (ADS)
 
