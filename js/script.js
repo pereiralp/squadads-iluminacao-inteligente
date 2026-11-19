@@ -154,12 +154,78 @@
       ),
     post = (id) => data.posts.find((p) => p.id === id),
     badge = (s) =>
-      `<span class="status ${s.replaceAll(" ", "-")}">${esc(s === "atencao" ? "Atenção" : s)}</span>`,
+      `<span class="status ${String(s).replaceAll(" ", "-")}">${esc(statusLabel(s))}</span>`,
     toast = (s) => {
       $("toast").textContent = s;
       $("toast").classList.remove("hidden");
       setTimeout(() => $("toast").classList.add("hidden"), 2600);
     };
+  const PRIORITY_LABELS = {
+    critica: "Crítica",
+    alta: "Alta",
+    media: "Média",
+    baixa: "Baixa",
+  };
+  const STATUS_LABELS = {
+    aguardando: "Aguardando aprovação",
+    aprovado: "Aprovado",
+    "em atendimento": "Em andamento",
+    "pendente de peça": "Pendente de peça",
+    resolvido: "Resolvido",
+    rejeitado: "Rejeitado",
+    cancelado: "Cancelado",
+    manutencao: "Em manutenção",
+    offline: "Offline",
+    normal: "Normal",
+    atencao: "Atenção",
+    falha: "Falha",
+  };
+  const DEFAULT_SETTINGS = {
+    tariff: 0.92,
+    emission: 0.084,
+    offlineMinutes: 10,
+    approvalHours: 4,
+  };
+  function normalizeData() {
+    data.settings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
+    data.posts = (data.posts || []).map((p, index) => ({
+      region: index % 3 === 0 ? "Centro" : index % 3 === 1 ? "Reta" : "Fátima",
+      nominal: 120,
+      consumption: Math.max(0, Math.round((p.lum || 0) * 0.82) / 10),
+      lastCommunication: p.status === "offline" ? "há 18 min" : "agora",
+      sensors: { luminosity: p.lum || 0, presence: index % 2 ? "Sem movimento" : "Movimento detectado", communication: p.status === "offline" ? "Sem sinal" : "Online" },
+      ...p,
+    }));
+    data.tickets = (data.tickets || []).map((t) => ({
+      priority: t.priority || (t.issue && /queimada|intensidade/i.test(t.issue) ? "alta" : "media"),
+      createdAt: t.createdAt || new Date(Date.now() - (t.id || 1) * 45 * 60000).toISOString(),
+      arrivalAt: t.arrivalAt || "",
+      finishedAt: t.finishedAt || "",
+      recurrence: t.recurrence || 0,
+      origin: t.origin || "Sensor simulado",
+      reason: t.reason || "",
+      ...t,
+      status: t.status === "aberto" ? "aguardando" : t.status,
+    }));
+    data.next = data.next || Math.max(0, ...data.tickets.map((t) => Number(t.id) || 0)) + 1;
+  }
+  normalizeData();
+  save();
+  function statusLabel(status) {
+    return STATUS_LABELS[status] || status;
+  }
+  function priorityLabel(priority) {
+    return PRIORITY_LABELS[priority] || "Média";
+  }
+  function activeTicketForPost(id) {
+    return data.tickets.find((t) => t.post === id && !["resolvido", "rejeitado", "cancelado"].includes(t.status));
+  }
+  function refreshPostState(id) {
+    const p = post(id);
+    const t = activeTicketForPost(id);
+    if (!p || !t) return;
+    if (["em atendimento", "pendente de peça"].includes(t.status)) p.status = "manutencao";
+  }
   function nav(page) {
     if (
       role === "tecnico" &&
@@ -876,39 +942,19 @@
   }
   function tickets() {
     let f = $("filterTicket").value,
-      rows = data.tickets.filter((t) => f === "todos" || t.status === f);
-    $("ticketsTable").innerHTML =
-      `<table><tr><th>Chamado</th><th>Poste</th><th>Problema</th><th>Status</th><th>Responsável</th><th>Ação</th></tr>${rows.map((t) => `<tr><td>#${t.id}</td><td>${t.post} — ${esc(post(t.post)?.address || "")}</td><td>${esc(t.issue)}</td><td>${badge(t.status)}</td><td>${esc(t.tech || "Aguardando")}</td><td class="actions">${role === "gestor" && t.status === "aberto" ? `<button class="btn small" data-action="approve" data-id="${t.id}">Aprovar e atribuir</button>` : ""}${t.status === "resolvido" ? "✓ Concluído" : "—"}</td></tr>`).join("")}</table>`;
+      priority = $("filterPriority")?.value || "todos",
+      rows = data.tickets.filter((t) => (f === "todos" || t.status === f) && (priority === "todos" || t.priority === priority));
+    $("ticketsTable").innerHTML = `<table><tr><th>Chamado</th><th>Poste</th><th>Problema</th><th>Prioridade</th><th>Status</th><th>Responsavel</th><th>Acao</th></tr>${rows.map((t) => `<tr><td>#${t.id}</td><td>${t.post} &mdash; ${esc(post(t.post)?.address || "")}</td><td>${esc(t.issue)}</td><td>${priorityLabel(t.priority)}</td><td>${badge(t.status)}</td><td>${esc(t.tech || "Aguardando")}</td><td class="actions">${role === "gestor" && t.status === "aguardando" ? `<button class="btn small" data-action="approve" data-id="${t.id}">Aprovar e atribuir</button><button class="btn alt small" data-action="reject" data-id="${t.id}">Rejeitar</button>` : ""}${role === "gestor" && ["aguardando","aprovado"].includes(t.status) ? `<button class="btn alt small" data-action="cancel" data-id="${t.id}">Cancelar</button>` : ""}${role === "gestor" && t.status === "aprovado" ? `<button class="btn alt small" data-action="reassign" data-id="${t.id}">Reatribuir</button>` : ""}${t.status === "resolvido" ? "Concluido" : ""}</td></tr>`).join("")}</table>`;
   }
   function mobile() {
     let f = $("filterMobile").value;
-    let rows = data.tickets.filter(
-      (t) => t.status !== "aberto" && (f === "todos" || t.status === f),
-    );
-    $("mobileOrders").innerHTML = rows.length
-      ? rows
-          .map(
-            (t) =>
-              `<div class="order" data-action="ticket" data-id="${t.id}"><b>Poste ${t.post} — ${esc(post(t.post)?.address || "")}</b><small>${esc(t.issue)} • ${esc(t.status)}</small></div>`,
-          )
-          .join("")
-      : '<div class="empty">Nenhuma ordem disponível. O gestor precisa aprovar os chamados.</div>';
-    let t = data.tickets.find(
-      (t) => t.id === selectedTicket && t.status !== "aberto",
-    );
-    $("mobileDetail").innerHTML = t
-      ? `<div class="panel" style="margin:12px"><h2>Atendimento #${t.id}</h2><p>Poste ${t.post} — ${esc(t.issue)}</p><p>${badge(t.status)}</p>${t.status === "aprovado" ? `<button class="btn" data-action="start" data-id="${t.id}">Iniciar atendimento</button>` : ""}${t.status === "em atendimento" ? `<label class="field"><input type="checkbox" id="checkDiagnosis"> Diagnóstico realizado</label><label class="field"><input type="checkbox" id="checkCircuit"> Circuito verificado</label><label class="field">Observações<input id="techNote" placeholder="Descreva o serviço"></label><button class="btn" data-action="finish" data-id="${t.id}">Finalizar atendimento</button>` : ""}${t.status === "resolvido" ? `<p class="notice">Atendimento concluído. ${esc(t.note)}</p>` : ""}</div>`
-      : "";
+    let rows = data.tickets.filter((t) => t.tech === "Rafael Souza" && !["aguardando", "rejeitado", "cancelado"].includes(t.status) && (f === "todos" || t.status === f));
+    $("mobileOrders").innerHTML = rows.length ? rows.map((t) => `<div class="order" data-action="ticket" data-id="${t.id}"><b>Poste ${t.post} &mdash; ${esc(post(t.post)?.address || "")}</b><small>${esc(t.issue)} &middot; ${badge(t.status)} &middot; ${priorityLabel(t.priority)}</small></div>`).join("") : '<div class="empty">Nenhuma ordem disponivel. O gestor precisa aprovar os chamados.</div>';
+    let t = data.tickets.find((item) => item.id === selectedTicket && !["aguardando", "rejeitado", "cancelado"].includes(item.status));
+    $("mobileDetail").innerHTML = t ? `<div class="panel" style="margin:12px"><h2>Atendimento #${t.id}</h2><p>Poste ${t.post} &mdash; ${esc(t.issue)}</p><p>${badge(t.status)} &middot; ${priorityLabel(t.priority)}</p>${t.status === "aprovado" ? `<button class="btn" data-action="start" data-id="${t.id}">Iniciar atendimento</button>` : ""}${t.status === "em atendimento" ? `<label class="field"><input type="checkbox" id="checkDiagnosis"> Diagnostico realizado</label><label class="field"><input type="checkbox" id="checkCircuit"> Circuito verificado</label><label class="field">Observacoes<input id="techNote" placeholder="Descreva o servico"></label><div class="actions"><button class="btn" data-action="finish" data-id="${t.id}">Finalizar atendimento</button><button class="btn alt" data-action="pause" data-id="${t.id}">Pendente de peca</button></div>` : ""}${t.status === ("pendente de pe" + String.fromCharCode(231) + "a") ? `<p class="notice">Aguardando peca ou insumo para continuar.</p><button class="btn" data-action="resume" data-id="${t.id}">Retomar atendimento</button>` : ""}${t.status === "resolvido" ? `<p class="notice">Atendimento concluido. ${esc(t.note)}</p>` : ""}</div>` : "";
   }
   function alerts() {
-    $("alertsList").innerHTML =
-      data.posts
-        .filter((p) => p.status !== "normal")
-        .map(
-          (p) =>
-            `<div class="order"><b>Poste ${p.id} — ${esc(p.address)}</b><small>${badge(p.status)} ${esc(p.issue)}</small></div>`,
-        )
-        .join("") || '<div class="empty">Sem alertas ativos</div>';
+    $("alertsList").innerHTML = data.posts.filter((p) => p.status !== "normal").map((p) => `<div class="order"><b>Poste ${p.id} &mdash; ${esc(p.address)}</b><small>${badge(p.status)} ${esc(p.issue)}</small></div>`).join("") || '<div class="empty">Sem alertas ativos</div>';
   }
   function renderExtras() {
     const last = data.tickets.slice(0, 3);
@@ -946,6 +992,7 @@
     $("reportFailures").textContent = data.tickets.length + " chamados";
     renderExtras();
     refreshInsights();
+    renderSettings();
     requestAnimationFrame(renderEnergyCharts);
   }
   function failure(id) {
@@ -953,7 +1000,7 @@
     let p = post(id);
     if (!p) return;
     let active = data.tickets.find(
-      (t) => t.post === id && t.status !== "resolvido",
+      (t) => t.post === id && !["resolvido", "rejeitado", "cancelado"].includes(t.status),
     );
     if (active) {
       toast("Já existe chamado ativo para esse poste");
@@ -965,10 +1012,12 @@
     data.tickets.unshift({
       id: data.next++,
       post: id,
-      status: "aberto",
+      status: "aguardando",
+      priority: "alta",
       issue: p.issue,
       tech: "",
       note: "",
+      origin: "Sensor simulado",
     });
     save();
     render();
@@ -1013,12 +1062,46 @@
       );
     }
     if (action === "failure") failure(id);
+    if (action === "manualTicket") {
+      if (role !== "gestor") return toast("Apenas o gestor pode abrir chamados");
+      let p = post(selectedPost) || data.posts[0];
+      if (!p) return;
+      data.tickets.unshift({ id: data.next++, post: p.id, status: "aguardando", priority: $("filterPriority")?.value === "todos" ? "media" : ($("filterPriority")?.value || "media"), issue: "Manutenção preventiva solicitada", tech: "", note: "", origin: "Abertura manual" });
+      p.status = "atencao";
+      p.issue = "Manutenção preventiva solicitada";
+      save();
+      render();
+      toast("Chamado manual criado e enviado para aprovação");
+    }
+    if (action === "reject" || action === "cancel") {
+      if (role !== "gestor") return;
+      let t = data.tickets.find((item) => item.id === id);
+      if (!t || !["aguardando", "aprovado"].includes(t.status)) return;
+      t.status = action === "reject" ? "rejeitado" : "cancelado";
+      t.reason = action === "reject" ? "Não aprovado pelo gestor" : "Cancelado pelo gestor";
+      let p = post(t.post);
+      if (p && !activeTicketForPost(p.id)) { p.status = "normal"; p.issue = ""; }
+      save();
+      render();
+      toast(action === "reject" ? "Chamado rejeitado" : "Chamado cancelado");
+    }
+    if (action === "reassign") {
+      if (role !== "gestor") return;
+      let t = data.tickets.find((item) => item.id === id);
+      if (!t || t.status !== "aprovado") return;
+      t.tech = t.tech === "Rafael Souza" ? "Equipe de campo" : "Rafael Souza";
+      save();
+      render();
+      toast("Responsável atualizado");
+    }
     if (action === "approve") {
       if (role !== "gestor") return;
       let t = data.tickets.find((t) => t.id === id);
-      if (t?.status === "aberto") {
+      if (t?.status === "aguardando") {
         t.status = "aprovado";
         t.tech = "Rafael Souza";
+        t.approvedAt = new Date().toISOString();
+        refreshPostState(t.post);
         save();
         render();
         toast("Chamado aprovado e atribuído ao técnico");
@@ -1030,11 +1113,33 @@
     }
     if (action === "start") {
       let t = data.tickets.find((t) => t.id === id);
-      if (role === "tecnico" && t?.status === "aprovado") {
+      if (role === "tecnico" && t?.status === "aprovado" && t.tech === "Rafael Souza") {
         t.status = "em atendimento";
+        t.arrivalAt = new Date().toISOString();
+        refreshPostState(t.post);
         save();
         render();
         toast("Atendimento iniciado");
+      }
+    }
+    if (action === "pause") {
+      let t = data.tickets.find((item) => item.id === id);
+      if (role === "tecnico" && t?.status === "em atendimento") {
+        t.status = "pendente de peça";
+        t.reason = "Aguardando peça ou insumo";
+        save();
+        render();
+        toast("Chamado marcado como pendente de peça");
+      }
+    }
+    if (action === "resume") {
+      let t = data.tickets.find((item) => item.id === id);
+      if (role === "tecnico" && t?.status === "pendente de peça") {
+        t.status = "em atendimento";
+        t.reason = "";
+        save();
+        render();
+        toast("Atendimento retomado");
       }
     }
     if (action === "finish") {
@@ -1043,6 +1148,7 @@
       if (!$("checkDiagnosis")?.checked || !$("checkCircuit")?.checked)
         return toast("Conclua o checklist primeiro");
       t.status = "resolvido";
+      t.finishedAt = new Date().toISOString();
       t.note = $("techNote").value.trim() || "Checklist concluído";
       let p = post(t.post);
       p.status = "normal";
@@ -1070,6 +1176,7 @@
   $("resetBtn").onclick = () => {
     if (confirm("Reiniciar todos os dados demonstrativos?")) {
       data = initial();
+      normalizeData();
       save();
       selectedTicket = null;
       render();
@@ -1092,7 +1199,34 @@
     $(id).addEventListener(id === "searchPost" ? "input" : "change", posts),
   );
   $("filterTicket").onchange = tickets;
+  $("filterPriority").onchange = tickets;
   $("filterMobile").onchange = mobile;
+  $("createManualTicket").onclick = () => {
+    if (role !== "gestor") return toast("Apenas o gestor pode abrir chamados");
+    const p = post(selectedPost) || data.posts[0];
+    if (!p) return;
+    data.tickets.unshift({ id: data.next++, post: p.id, status: "aguardando", priority: "media", issue: "Manutenção preventiva solicitada", tech: "", note: "", origin: "Abertura manual" });
+    p.status = "atencao";
+    p.issue = "Manutenção preventiva solicitada";
+    save();
+    render();
+    toast("Chamado manual criado e enviado para aprovação");
+  };
+  function renderSettings() {
+    if ($("settingTariff")) $("settingTariff").value = data.settings.tariff;
+    if ($("settingEmission")) $("settingEmission").value = data.settings.emission;
+    if ($("settingOffline")) $("settingOffline").value = data.settings.offlineMinutes;
+    if ($("settingApproval")) $("settingApproval").value = data.settings.approvalHours;
+  }
+  $("saveSettings").onclick = () => {
+    data.settings.tariff = Number($("settingTariff").value) || DEFAULT_SETTINGS.tariff;
+    data.settings.emission = Number($("settingEmission").value) || DEFAULT_SETTINGS.emission;
+    data.settings.offlineMinutes = Number($("settingOffline").value) || DEFAULT_SETTINGS.offlineMinutes;
+    data.settings.approvalHours = Number($("settingApproval").value) || DEFAULT_SETTINGS.approvalHours;
+    save();
+    $("settingsFeedback").textContent = "Parâmetros salvos nesta demonstração.";
+    setTimeout(() => { $("settingsFeedback").textContent = ""; }, 2600);
+  };
   $("exportJson").onclick = () =>
     exportFile(
       "squad_ads_relatorio.json",

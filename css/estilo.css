@@ -2470,3 +2470,44 @@ body:has(.map-expanded) .squad-offline-label {
 .squad-map-notice button {
   margin-top: 7px;
 }
+.map-primary {
+  height: 560px !important;
+  min-height: 520px;
+}
+
+#monitoramento .cols {
+  display: block;
+}
+
+#monitoramento #postDetail {
+  margin-top: 18px;
+}
+
+#monitoramento .map-primary {
+  min-height: 540px;
+}
+
+.settings-grid {
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+}
+
+.settings-feedback {
+  color: var(--accent, #57d2f7);
+  font-size: .82rem;
+  margin-left: 10px;
+}
+
+.status.aguardando { color: #ffd166; }
+.status.pendente-de-peça { color: #f4a261; }
+.status.rejeitado,
+.status.cancelado { color: #a9b4c2; }
+.status.manutencao { color: #e9a84d; }
+.status.offline { color: #ff6b6b; }
+.status-bullet.maintenance { background: #e9a84d; }
+.status-bullet.offline { background: #ff6b6b; }
+
+@media (max-width: 900px) {
+  #monitoramento .cols,
+  .settings-grid { grid-template-columns: 1fr; }
+  .map-primary { height: 500px !important; min-height: 460px; }
+}

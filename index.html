@@ -262,6 +262,10 @@
                 <i class="status-bullet caution"></i> Atenção</button
               ><button type="button" class="map-filter" data-map-filter="falha">
                 <i class="status-bullet error"></i> Falha</button
+              ><button type="button" class="map-filter" data-map-filter="manutencao">
+                <i class="status-bullet maintenance"></i> Em manutenção</button
+              ><button type="button" class="map-filter" data-map-filter="offline">
+                <i class="status-bullet offline"></i> Offline</button
               ><button
                 type="button"
                 class="map-reset"
@@ -342,6 +346,21 @@
             </p>
             <div id="lightingOverview" class="lighting-overview"></div>
             <div id="lightsTable"></div>
+            <div class="panel settings-panel">
+              <div class="line-between">
+                <h2>Parâmetros simulados</h2>
+                <span class="tiny-label">DEMONSTRAÇÃO LOCAL</span>
+              </div>
+              <p class="muted">Configure os valores usados nos indicadores de economia e nos alertas da rede.</p>
+              <div class="formrow settings-grid">
+                <label class="field">Tarifa (R$/kWh)<input id="settingTariff" type="number" min="0" step="0.01" /></label>
+                <label class="field">CO₂ (kg/kWh)<input id="settingEmission" type="number" min="0" step="0.001" /></label>
+                <label class="field">Offline após (min)<input id="settingOffline" type="number" min="1" step="1" /></label>
+                <label class="field">Aprovação após (h)<input id="settingApproval" type="number" min="1" step="1" /></label>
+              </div>
+              <button class="btn small" id="saveSettings" type="button">Salvar parâmetros</button>
+              <span class="settings-feedback" id="settingsFeedback" role="status"></span>
+            </div>
           </div>
         </section>
         <!-- ENERGIA: séries simuladas coerentes, gráficos responsivos e seletor de período. -->
@@ -461,18 +480,29 @@
             <div class="toolbar">
               <select id="filterTicket">
                 <option value="todos">Todos os chamados</option>
-                <option value="aberto">Abertos</option>
+                <option value="aguardando">Aguardando aprovação</option>
                 <option value="aprovado">Aprovados</option>
                 <option value="em atendimento">Em atendimento</option>
+                <option value="pendente de peça">Pendente de peça</option>
                 <option value="resolvido">Resolvidos</option></select
+              ><select id="filterPriority">
+                <option value="todos">Todas as prioridades</option>
+                <option value="critica">Crítica</option>
+                <option value="alta">Alta</option>
+                <option value="media">Média</option>
+                <option value="baixa">Baixa</option>
+              </select
               ><button class="btn alt" id="createFailure">
                 Gerar falha de teste
-              </button>
+              </button><button class="btn" id="createManualTicket" type="button">Abrir chamado manual</button>
             </div>
             <div class="tablewrap" id="ticketsTable"></div>
           </div>
         </section>
         <section class="section" id="relatorios">
+          <div class="toolbar report-toolbar">
+            <label class="field inline-field">Periodo<select id="reportPeriod"><option value="mes">Mes atual</option><option value="anterior">Mes anterior</option><option value="custom">Intervalo demonstrativo</option></select></label>
+          </div>
           <div class="panel">
             <h2>Relatórios</h2>
             <div class="detail">
