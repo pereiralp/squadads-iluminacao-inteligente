@@ -439,6 +439,6 @@ O projeto representa uma etapa de desenvolvimento acadêmico e poderá servir co
 
 [![VISITAR PROJETO](https://img.shields.io/badge/VISITAR_PROJETO-38BDF8?style=for-the-badge&logo=githubpages&logoColor=white)](https://pereiralp.github.io/squadads-iluminacao-inteligente/)
 
-**Desenvolvido pela equipe Squad ADS — 2026**
+**Desenvolvido pela equipe Squad ADS — 2026.**
 
 </div>
