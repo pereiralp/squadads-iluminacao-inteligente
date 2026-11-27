@@ -2,11 +2,11 @@
 <html lang="pt-BR">
   <head>
     <link rel="stylesheet" href="css/estilo.css" />
-    <!-- Projeto acadêmico Squad ADS: arquivo único, dados demonstrativos em localStorage. -->
+    <!-- Projeto acadêmico Firefly: arquivo único, dados demonstrativos em localStorage. -->
     <!-- Versão com MapLibre GL JS + OpenFreeMap (ruas vetoriais), sem mapa raster sobreposto. -->
     <meta charset="utf-8" />
     <meta content="width=device-width,initial-scale=1" name="viewport" />
-    <title>Squad ADS | Central de Operações</title>
+    <title>Firefly | Central de Iluminação Inteligente</title>
     <!-- MapLibre GL JS: renderização de mapas vetoriais com ruas e bairros. -->
     <link
       rel="stylesheet"
@@ -21,14 +21,10 @@
     <div class="login" id="login">
       <div class="login-card">
         <div class="logo login-logo">
-          <svg aria-hidden="true" class="squad-mark" viewbox="0 0 64 64">
-            <path d="M29 5 41 18v18L20 56H7l22-25Z" fill="#124C76"></path>
-            <path d="M43 15 57 30v22L39 39V22Z" fill="#43C6EF"></path>
-            <path d="M10 28 26 12v20L10 47Z" fill="#43C6EF"></path>
-          </svg>
+          <img class="firefly-logo login-logo-image" src="assets/firefly/logo-principal.png" alt="Firefly" />
         </div>
         <h1>Plataforma de Iluminação Inteligente</h1>
-        <div class="muted">Energia Solar • Viçosa — MG<br />Squad ADS</div>
+        <div class="muted">Iluminação inteligente • Viçosa — MG<br />Tecnologia que conecta a cidade</div>
         <label class="field"
           >Perfil<select id="loginRole">
             <option value="gestor">Carlos Mendes —  Gestor</option>
@@ -49,11 +45,7 @@
     <div class="layout hidden" id="app">
       <aside class="sidebar">
         <div class="brand">
-          <svg aria-hidden="true" class="squad-mark" viewbox="0 0 64 64">
-            <path d="M29 5 41 18v18L20 56H7l22-25Z" fill="#124C76"></path>
-            <path d="M43 15 57 30v22L39 39V22Z" fill="#43C6EF"></path>
-            <path d="M10 28 26 12v20L10 47Z" fill="#43C6EF"></path></svg
-          ><span>Squad<span class="cyan">ADS</span></span>
+          <img class="firefly-logo sidebar-logo" src="assets/firefly/logo-horizontal.png" alt="Firefly" />
         </div>
         <button class="nav active" data-page="dashboard">
           <span class="nav-icon">◫</span><span>Dashboard</span></button
@@ -85,7 +77,7 @@
       <main class="main">
         <header class="top">
           <div class="hello">
-            <div class="eyebrow">CENTRAL DE OPERAÇÕES • VIÇOSA / MG</div>
+            <div class="eyebrow">FIREFLY • CENTRAL DE OPERAÇÕES • VIÇOSA / MG</div>
             <h1 id="pageTitle">Dashboard geral</h1>
             <span class="tag"
               >Monitore sua cidade em tempo real
@@ -552,7 +544,7 @@
           </div>
         </section>
         <div class="footer">
-          Squad ADS • Protótipo funcional em arquivo único • Dados armazenados
+          Firefly • Protótipo funcional em arquivo único • Dados armazenados
           somente neste navegador
         </div>
       </main>

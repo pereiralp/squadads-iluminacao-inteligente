@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap');
+
 :root {
   font-family: Inter, system-ui, Arial, sans-serif;
   color: #173047;
@@ -2510,4 +2512,197 @@ body:has(.map-expanded) .squad-offline-label {
   #monitoramento .cols,
   .settings-grid { grid-template-columns: 1fr; }
   .map-primary { height: 500px !important; min-height: 460px; }
+}
+
+/* =================== IDENTIDADE VISUAL FIREFLY ===================
+   Aplicação do Brand Kit: preto, azul escuro, verde neon, ciano e branco. */
+:root {
+  --firefly-black: #0b0f14;
+  --firefly-blue: #0a1f3d;
+  --firefly-cyan: #00e5ff;
+  --firefly-neon: #a6ff00;
+  --firefly-white: #f5f7fa;
+  --firefly-line: rgba(0, 229, 255, 0.2);
+  --firefly-panel: rgba(10, 31, 61, 0.68);
+  --firefly-muted: #9eb2c7;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--firefly-white);
+  background: var(--firefly-black);
+}
+
+body {
+  background:
+    linear-gradient(rgba(11, 15, 20, 0.84), rgba(11, 15, 20, 0.96)),
+    url('../assets/firefly/padrao-fundo.png') center top / cover fixed,
+    var(--firefly-black);
+}
+
+.login {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.18), transparent 38%),
+    linear-gradient(rgba(11, 15, 20, 0.88), rgba(11, 15, 20, 0.98)),
+    url('../assets/firefly/padrao-fundo.png') center / cover;
+}
+
+.login-card {
+  background: linear-gradient(145deg, rgba(10, 31, 61, 0.94), rgba(11, 15, 20, 0.98));
+  border: 1px solid var(--firefly-line);
+  border-radius: 22px;
+  box-shadow: 0 0 55px rgba(0, 229, 255, 0.1), 0 24px 80px #000b;
+}
+
+.login-logo-image {
+  width: min(300px, 82%);
+  max-height: 170px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(166, 255, 0, 0.22));
+}
+
+.login-card h1,
+.top h1,
+.panel h2,
+.feature-card h2,
+.activity-card h2,
+.solar-card h2 {
+  font-family: 'Montserrat', system-ui, sans-serif;
+}
+
+.layout {
+  background: linear-gradient(145deg, rgba(10, 31, 61, 0.92), rgba(11, 15, 20, 0.96));
+  border-color: rgba(0, 229, 255, 0.18);
+  box-shadow: 0 25px 85px #000b, 0 0 70px rgba(0, 229, 255, 0.05);
+}
+
+.sidebar {
+  background: linear-gradient(165deg, #080d14, #0a1f3d 145%);
+  border-color: var(--firefly-line);
+}
+
+.brand {
+  padding: 8px 8px 29px;
+}
+
+.sidebar-logo {
+  width: 178px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.nav {
+  color: #c8d5e2;
+}
+
+.nav:hover,
+.nav.active {
+  background: linear-gradient(95deg, rgba(0, 229, 255, 0.16), rgba(166, 255, 0, 0.08));
+  border-color: rgba(0, 229, 255, 0.32);
+}
+
+.nav.active {
+  box-shadow: inset 3px 0 0 var(--firefly-neon), 0 4px 16px rgba(0, 10, 23, 0.35);
+}
+
+.nav.active .nav-icon,
+.eyebrow,
+.section-kicker,
+.cyan,
+.link-mini,
+.feature-sub {
+  color: var(--firefly-cyan);
+}
+
+.sidebar-label {
+  color: var(--firefly-neon);
+}
+
+.top h1,
+.feature-card h2 em,
+.solar-number,
+.card .number {
+  color: var(--firefly-neon);
+}
+
+.tag,
+.muted,
+.card .label,
+.caption,
+.footer {
+  color: var(--firefly-muted);
+}
+
+.card,
+.panel,
+.feature-grid > div,
+.profile,
+.quick,
+.icon-btn,
+.sidebottom,
+.order,
+.detail div {
+  background: linear-gradient(145deg, rgba(10, 31, 61, 0.78), rgba(11, 15, 20, 0.86));
+  border-color: var(--firefly-line) !important;
+}
+
+.card::after {
+  background: rgba(166, 255, 0, 0.12);
+}
+
+.feature-card {
+  background:
+    linear-gradient(145deg, rgba(10, 31, 61, 0.72), rgba(11, 15, 20, 0.82)),
+    url('../assets/firefly/ondas.png') right bottom / 62% auto no-repeat !important;
+}
+
+.solar-card {
+  background:
+    linear-gradient(145deg, rgba(10, 31, 61, 0.76), rgba(11, 15, 20, 0.9)),
+    url('../assets/firefly/textura-pontos.png') right top / 42% auto no-repeat !important;
+}
+
+.panel:hover,
+.card:hover {
+  border-color: rgba(166, 255, 0, 0.42) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.34), 0 0 22px rgba(0, 229, 255, 0.06);
+}
+
+.btn {
+  background: linear-gradient(105deg, var(--firefly-neon), var(--firefly-cyan));
+  border-color: transparent;
+  color: #071018;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 800;
+}
+
+.btn.alt,
+.quick.active,
+.period-btn.active {
+  background: linear-gradient(105deg, rgba(166, 255, 0, 0.18), rgba(0, 229, 255, 0.18));
+  border-color: rgba(166, 255, 0, 0.4);
+  color: var(--firefly-white);
+}
+
+.status.normal,
+.status.resolvido {
+  background: rgba(166, 255, 0, 0.12);
+  border-color: rgba(166, 255, 0, 0.42);
+  color: var(--firefly-neon);
+}
+
+.map,
+.city-map,
+.map-primary {
+  background-color: #08182d !important;
+  border-color: var(--firefly-line);
+}
+
+.solar-bars span,
+.bar.solar {
+  background: linear-gradient(0deg, var(--firefly-neon), var(--firefly-cyan));
+}
+
+@media (max-width: 850px) {
+  .sidebar-logo {
+    width: 116px;
+  }
 }
